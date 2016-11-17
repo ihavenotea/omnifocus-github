@@ -18,14 +18,14 @@ function processIssues(err, res) {
     return;
   }
 
-  var script = formatScript(res);
+  var script = scriptForOmnifocusPro(res);
 
   temp.open('omnifocus-github', function(err, info) {
     if (!err) {
       fs.write(info.fd, script);
       fs.close(info.fd, function(err) {
         // @TODO: Remove empty callback when https://github.com/TooTallNate/node-applescript/issues/8 is resolved
-        applescript.execFile(info.path, ["-lJavaScript"], function(err, rtn) { });
+        applescript.execFile(info.path, [], function(err, rtn) { });
       });
     }
   });
@@ -43,6 +43,31 @@ function formatScript(arr) {
     + "}\n"
   }
   return script;
+}
+
+function scriptForOmnifocusPro(arr) {
+  var script = "tell application \"OmniFocus\"\n"
+  script += "tell default document\n"
+  for (var i = 0, len=arr.length; i < len; ++i) {
+    var issueName = arr[i].repository.full_name + "/issues/" + arr[i].number;
+    if (config.ignored_orgs && config.ignored_orgs.includes(arr[i].repository.owner.login)) continue;
+    script += "set matchCount to count (flattened tasks whose name is \"" + issueName + "\")\n"
+    script += "if matchCount is 0 then\n"
+    script += "parse tasks into it with transport text  \"" + issueName + " " + (config.default_context || "@GitHub") + " //" + arr[i].html_url + "\n" + arr[i].title + "\"\n"
+    script += "end if\n"
+  }
+  script += "end tell\n"
+  script += "activate \"OmniFocus\"\n"
+  script += "end tell\n"
+  return script;
+}
+
+function projectForRepo(repo) {
+  // TODO : figure out the syntax for setting the project
+  switch(repo.full_name) {
+  default:
+    return ""
+  }
 }
 
 function getConfig() {
