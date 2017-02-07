@@ -5,11 +5,11 @@
   "author": "Lin Clark <lin.w.clark@gmail.com> (http://lin-clark.com)",
   "bin": "cli.js",
   "dependencies": {
-    "applescript": "linclark/node-applescript",
-    "github": "^0.2.3",
-    "js-yaml": "^3.2.5",
-    "osenv": "^0.1.0",
-    "temp": "^0.8.1"
+    "applescript": "^1.0.0",
+    "github": "^8.1.1",
+    "js-yaml": "^3.7.0",
+    "osenv": "^0.1.4",
+    "temp": "^0.8.3"
   },
   "keywords": [],
   "license": "MIT",
