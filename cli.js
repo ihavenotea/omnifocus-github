@@ -11,11 +11,26 @@ if (config = getConfig()) {
   github.authenticate({type: 'oauth', token: config.token});
 }
 
-function getAssignments () {
-  return github.issues.getAll({filter: "assigned"});
+function getUser () {
+  return github.users.get({});
 }
 
-function processIssues(res) {
+function getAssignments (data) {
+  var username = data.login;
+  var allAssignmentTypes =
+      Promise.all([ github.issues.getAll({filter: "assigned"}),
+                    github.search.issues({q:"is:open is:pr author:" +
+                                          username })]);
+  var concatItems = function(items, res) {
+    return(items || []).concat(res.items || res);
+  };
+
+  return allAssignmentTypes.then(function(data) {
+   return data.reduce(concatItems);
+  });
+}
+
+function processItems(res) {
   var script = scriptForOmnifocusPro(res);
 
   temp.open('omnifocus-github', function(err, info) {
@@ -108,6 +123,7 @@ function handleHttpErrors(err) {
 }
 
 
-getAssignments().
-  then(processIssues).
+getUser().
+  then(getAssignments).
+  then(processItems).
   catch(handleHttpErrors);
