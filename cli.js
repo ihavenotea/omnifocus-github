@@ -91,14 +91,6 @@ function scriptForOmnifocusPro(arr) {
   return script;
 }
 
-function projectForRepo(repo) {
-  // TODO : figure out the syntax for setting the project
-  switch(repo.full_name) {
-  default:
-    return ""
-  }
-}
-
 function getConfig() {
   var path = osenv.home() + '/.omnifocus-github';
 
@@ -123,7 +115,6 @@ function handleHttpErrors(err) {
       throw err;
   }
 }
-
 
 getUser().
   then(getAssignments).
