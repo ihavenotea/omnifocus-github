@@ -46,11 +46,12 @@ function formatScript(arr) {
 }
 
 function scriptForOmnifocusPro(arr) {
+  var ignored_orgs = config.ignored_orgs.split(',');
   var script = "tell application \"OmniFocus\"\n"
   script += "tell default document\n"
   for (var i = 0, len=arr.length; i < len; ++i) {
     var issueName = arr[i].repository.full_name + "/issues/" + arr[i].number;
-    if (config.ignored_orgs && config.ignored_orgs.includes(arr[i].repository.owner.login)) continue;
+    if (config.ignored_orgs && ignored_orgs.includes(arr[i].repository.owner.login)) continue;
     script += "set matchCount to count (flattened tasks whose name is \"" + issueName + "\")\n"
     script += "if matchCount is 0 then\n"
     script += "parse tasks into it with transport text  \"" + issueName + " " + (config.default_context || "@GitHub") + " //" + arr[i].html_url + "\n" + arr[i].title + "\"\n"
