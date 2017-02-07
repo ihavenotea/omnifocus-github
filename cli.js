@@ -9,15 +9,13 @@ var yaml        = require('js-yaml');
 
 if (config = getConfig()) {
   github.authenticate({type: 'oauth', token: config.token});
-  github.issues.getAll({filter: "assigned"}, processIssues);
 }
 
-function processIssues(err, res) {
-  if (err) {
-    handleHttpErrors(err);
-    return;
-  }
+function getAssignments () {
+  return github.issues.getAll({filter: "assigned"});
+}
 
+function processIssues(res) {
   var script = scriptForOmnifocusPro(res);
 
   temp.open('omnifocus-github', function(err, info) {
@@ -109,3 +107,8 @@ function handleHttpErrors(err) {
       throw err;
   }
 }
+
+
+getAssignments().
+  then(processIssues).
+  catch(handleHttpErrors);
