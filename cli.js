@@ -95,7 +95,6 @@ function scriptForOmnifocusPro(arr) {
     script += "    end if\n"
   }
   script += "  end tell\n"
-  script += "  activate \"OmniFocus\"\n"
   script += "end tell\n"
   return script;
 }
@@ -128,4 +127,5 @@ function handleHttpErrors(err) {
 getUser().
   then(getAssignments).
   then(processItems).
+  then(function (data) {console.log("Sync Complete.")}).
   catch(handleHttpErrors);
