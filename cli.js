@@ -75,27 +75,27 @@ function repoInfo(item) {
 function scriptForOmnifocusPro(arr) {
   var ignored_orgs = config.ignored_orgs.split(',');
   var script = "tell application \"OmniFocus\"\n"
-  script += "tell default document\n"
+  script +=    "  tell default document\n"
   for (var i = 0, len=arr.length; i < len; ++i) {
 
     var repo = repoInfo(arr[i]);
     if (config.ignored_orgs && ignored_orgs.includes(repo.org_name)) continue;
-    script += "set issueURL to \"" + arr[i].html_url + "\"\n"
-		script += "set matchCount to count (flattened tasks whose note contains issueURL)\n"
-    script += "if matchCount is 0 then\n"
-    script += "parse tasks into it with transport text  \"" +
+    script += "    set issueURL to \"" + arr[i].html_url + "\"\n"
+		script += "    set matchCount to count (flattened tasks whose note contains issueURL)\n"
+    script += "    if matchCount is 0 then\n"
+    script += "      parse tasks into it with transport text  \"" +
       arr[i].title +
       " " + repo.full_name +
       " " + (config.default_context || "") +
       " //" + arr[i].html_url + "\"\n"
-    script += "else\n"
-    script += "set myTask to first flattened task whose note contains issueURL\n"
-		script += "set completed of myTask to false\n"
+    script += "    else\n"
+    script += "      set myTask to first flattened task whose note contains issueURL\n"
+		script += "      set completed of myTask to false\n"
 
-    script += "end if\n"
+    script += "    end if\n"
   }
-  script += "end tell\n"
-  script += "activate \"OmniFocus\"\n"
+  script += "  end tell\n"
+  script += "  activate \"OmniFocus\"\n"
   script += "end tell\n"
   return script;
 }
