@@ -20,6 +20,8 @@ npm install omnifocus-github --global
 1. In the config file, fill in values:
 ```yaml
 token: <your GitHub auth token here>
+ignored_orgs: <comma seperated org names to skip>
+default_context: <omnifocus context for synced items>
 ```
 
 ## Usage
