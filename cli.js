@@ -36,8 +36,8 @@ function getAssignments (data) {
   });
 }
 
-function processItems(res) {
-  var script = scriptForOmnifocusPro(res);
+function processItems(items) {
+  var script = scriptForOmnifocusPro(items);
 
   if(dryrun) {
     console.log(script);
@@ -62,32 +62,37 @@ function repoInfo(item) {
     result.url = item.repository.html_url
     result.full_name = item.repository.full_name
     result.name = item.repository.name
-  } else if (m = item.repository_url.match(/repo\/(([^\/]+)\/(.+))/)) {
-    result.full_name = m[1]
-    result.org_name = m[2];
-    result.name = m[3];
-    result.url = item.repository_url
+  } else if (item.repository_url) {
+    var m = item.repository_url.match(/repo\/(([^\/]+)\/(.+))/);
+    if (m) {
+      result.full_name = m[1]
+      result.org_name = m[2];
+      result.name = m[3];
+      result.url = item.repository_url
+    }
+  } else {
+    console.error("Could not process entry:");
+    console.error(item);
   }
 
   return result;
 }
 
-function scriptForOmnifocusPro(arr) {
+function scriptForOmnifocusPro(items) {
   var ignored_orgs = config.ignored_orgs.split(',');
   var script = "tell application \"OmniFocus\"\n"
   script +=    "  tell default document\n"
-  for (var i = 0, len=arr.length; i < len; ++i) {
-
-    var repo = repoInfo(arr[i]);
+  for (var item of items) {
+    var repo = repoInfo(item);
     if (config.ignored_orgs && ignored_orgs.includes(repo.org_name)) continue;
-    script += "    set issueURL to \"" + arr[i].html_url + "\"\n"
+    script += "    set issueURL to \"" + item.html_url + "\"\n"
 		script += "    set matchCount to count (flattened tasks whose note contains issueURL)\n"
     script += "    if matchCount is 0 then\n"
     script += "      parse tasks into it with transport text  \"" +
-      arr[i].title +
+      item.title +
       " " + repo.full_name +
       " " + (config.default_context || "") +
-      " //" + arr[i].html_url + "\"\n"
+      " //" + item.html_url + "\"\n"
     script += "    else\n"
     script += "      set myTask to first flattened task whose note contains issueURL\n"
 		script += "      set completed of myTask to false\n"
