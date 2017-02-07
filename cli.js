@@ -20,10 +20,9 @@ function processIssues(res) {
 
   temp.open('omnifocus-github', function(err, info) {
     if (!err) {
-      fs.write(info.fd, script);
+      fs.writeSync(info.fd, script);
       fs.close(info.fd, function(err) {
-        // @TODO: Remove empty callback when https://github.com/TooTallNate/node-applescript/issues/8 is resolved
-        applescript.execFile(info.path, [], function(err, rtn) { });
+        applescript.execFile(info.path, []);
       });
     }
   });
