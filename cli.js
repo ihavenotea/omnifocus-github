@@ -7,7 +7,11 @@ var osenv       = require('osenv');
 var temp        = require('temp').track();
 var yaml        = require('js-yaml');
 
-if (config = getConfig()) {
+
+var config = getConfig();
+var dryrun = process.argv.includes('--dry-run');
+
+if (config) {
   github.authenticate({type: 'oauth', token: config.token});
 }
 
@@ -34,6 +38,11 @@ function getAssignments (data) {
 
 function processItems(res) {
   var script = scriptForOmnifocusPro(res);
+
+  if(dryrun) {
+    console.log(script);
+    return;
+  }
 
   temp.open('omnifocus-github', function(err, info) {
     if (!err) {
