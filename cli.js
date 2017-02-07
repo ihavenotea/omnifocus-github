@@ -60,6 +60,10 @@ function scriptForOmnifocusPro(arr) {
       " " + repo.full_name +
       " " + (config.default_context || "") +
       " //" + arr[i].html_url + "\"\n"
+    script += "else\n"
+    script += "set myTask to first flattened task whose note contains issueURL\n"
+		script += "set completed of myTask to false\n"
+
     script += "end if\n"
   }
   script += "end tell\n"
