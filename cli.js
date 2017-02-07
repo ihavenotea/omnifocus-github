@@ -39,6 +39,11 @@ function repoInfo(item) {
     result.url = item.repository.html_url
     result.full_name = item.repository.full_name
     result.name = item.repository.name
+  } else if (m = item.repository_url.match(/repo\/(([^\/]+)\/(.+))/)) {
+    result.full_name = m[1]
+    result.org_name = m[2];
+    result.name = m[3];
+    result.url = item.repository_url
   }
 
   return result;
