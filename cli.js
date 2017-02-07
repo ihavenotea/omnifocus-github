@@ -31,16 +31,35 @@ function processIssues(err, res) {
   });
 }
 
+function repoInfo(item) {
+  var result = {};
+
+  if (item.repository) {
+    result.org_name = item.repository.owner.login;
+    result.url = item.repository.html_url
+    result.full_name = item.repository.full_name
+    result.name = item.repository.name
+  }
+
+  return result;
+}
+
 function scriptForOmnifocusPro(arr) {
   var ignored_orgs = config.ignored_orgs.split(',');
   var script = "tell application \"OmniFocus\"\n"
   script += "tell default document\n"
   for (var i = 0, len=arr.length; i < len; ++i) {
-    var issueName = arr[i].repository.full_name + "/issues/" + arr[i].number;
-    if (config.ignored_orgs && ignored_orgs.includes(arr[i].repository.owner.login)) continue;
-    script += "set matchCount to count (flattened tasks whose name is \"" + issueName + "\")\n"
+
+    var repo = repoInfo(arr[i]);
+    if (config.ignored_orgs && ignored_orgs.includes(repo.org_name)) continue;
+    script += "set issueURL to \"" + arr[i].html_url + "\"\n"
+		script += "set matchCount to count (flattened tasks whose note contains issueURL)\n"
     script += "if matchCount is 0 then\n"
-    script += "parse tasks into it with transport text  \"" + issueName + " " + (config.default_context || "@GitHub") + " //" + arr[i].html_url + "\n" + arr[i].title + "\"\n"
+    script += "parse tasks into it with transport text  \"" +
+      arr[i].title +
+      " " + repo.full_name +
+      " " + (config.default_context || "") +
+      " //" + arr[i].html_url + "\"\n"
     script += "end if\n"
   }
   script += "end tell\n"
