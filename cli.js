@@ -31,20 +31,6 @@ function processIssues(err, res) {
   });
 }
 
-function formatScript(arr) {
-  var script = "";
-  for (var i = 0, len=arr.length; i < len; ++i) {
-    var issueName = arr[i].repository.full_name + "/issues/" + arr[i].number;
-
-    script += "of = Library('OmniFocus');"
-    + "var name = '"+ issueName + "';"
-    + "if (of.tasksWithName(name).length <= 0) {"
-    + "of.parse('" + issueName +" @GitHub');"
-    + "}\n"
-  }
-  return script;
-}
-
 function scriptForOmnifocusPro(arr) {
   var ignored_orgs = config.ignored_orgs.split(',');
   var script = "tell application \"OmniFocus\"\n"
