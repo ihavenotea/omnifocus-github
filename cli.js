@@ -20,7 +20,9 @@ function getAssignments (data) {
   var allAssignmentTypes =
       Promise.all([ github.issues.getAll({filter: "assigned"}),
                     github.search.issues({q:"is:open is:pr author:" +
-                                          username })]);
+                                          username}),
+                    github.search.issues({q:"is:open is:pr review-requested:"
+                                          + username})]);
   var concatItems = function(items, res) {
     return(items || []).concat(res.items || res);
   };
