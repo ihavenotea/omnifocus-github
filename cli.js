@@ -8,6 +8,7 @@ var temp        = require('temp').track();
 var yaml        = require('js-yaml');
 
 var AssignmentSource = require('./lib/assignment-source.js');
+var OmniFocusSync = require('./lib/omnifocus-sync.js');
 
 var config = getConfig();
 var dryrun = process.argv.includes('--dry-run');
@@ -16,75 +17,11 @@ if (config) {
   github.authenticate({type: 'oauth', token: config.token});
 }
 
+var omniSync = new OmniFocusSync({dryrun: dryrun,
+                                  ignored_orgs: config.ignored_orgs,
+                                  default_context: config.default_context});
+
 source = new AssignmentSource(github);
-
-function processItems(items) {
-  var script = scriptForOmnifocusPro(items);
-
-  if(dryrun) {
-    console.log(script);
-    return;
-  }
-
-  temp.open('omnifocus-github', function(err, info) {
-    if (!err) {
-      fs.writeSync(info.fd, script);
-      fs.close(info.fd, function(err) {
-        applescript.execFile(info.path, []);
-      });
-    }
-  });
-}
-
-function repoInfo(item) {
-  var result = {};
-
-  if (item.repository) {
-    result.org_name = item.repository.owner.login;
-    result.url = item.repository.html_url
-    result.full_name = item.repository.full_name
-    result.name = item.repository.name
-  } else if (item.repository_url) {
-    var m = item.repository_url.match(/repo\/(([^\/]+)\/(.+))/);
-    if (m) {
-      result.full_name = m[1]
-      result.org_name = m[2];
-      result.name = m[3];
-      result.url = item.repository_url
-    }
-  } else {
-    console.error("Could not process entry:");
-    console.error(item);
-  }
-
-  return result;
-}
-
-function scriptForOmnifocusPro(items) {
-  var ignored_orgs = config.ignored_orgs.split(',');
-  var script = "tell application \"OmniFocus\"\n"
-  script +=    "  tell default document\n"
-  for (var item of items) {
-    var repo = repoInfo(item);
-    if (config.ignored_orgs && ignored_orgs.includes(repo.org_name)) continue;
-    script += "    set issueURL to \"" + item.html_url + "\"\n"
-		script += "    set matchCount to count (flattened tasks whose note contains issueURL)\n"
-    script += "    if matchCount is 0 then\n"
-    script += "      parse tasks into it with transport text \"" +
-      item.title +
-      " " + repo.full_name +
-      " " + (config.default_context || "") +
-      " //" + item.html_url + "\"\n"
-    script += "    else\n"
-    script += "      set myTask to first flattened task whose note contains issueURL\n"
-		script += "      set completed of myTask to false\n"
-
-    script += "    end if\n"
-  }
-  script += "  end tell\n"
-  script += "end tell\n"
-  return script;
-}
 
 function getConfig() {
   var path = osenv.home() + '/.omnifocus-github';
@@ -102,6 +39,6 @@ function getConfig() {
 }
 
 source.getAssignments().
-  then(processItems).
+  then((data) => omniSync.processItems(data)).
   then(() => console.log("Sync Complete.")).
   catch(source.handleHttpErrors)
