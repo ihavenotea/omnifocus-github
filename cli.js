@@ -5,33 +5,33 @@ var github      = new (require("github"))({version: "3.0.0"})
 var osenv       = require('osenv')
 var yaml        = require('js-yaml')
 
-var AssignmentSource = require('./lib/assignment-source.js');
-var OmniFocusSync = require('./lib/omnifocus-sync.js');
+var AssignmentSource = require('./lib/assignment-source.js')
+var OmniFocusSync = require('./lib/omnifocus-sync.js')
 
-var config = getConfig();
-var dryrun = process.argv.includes('--dry-run');
+var config = getConfig()
+var dryrun = process.argv.includes('--dry-run')
 
 if (config) {
-  github.authenticate({type: 'oauth', token: config.token});
+  github.authenticate({type: 'oauth', token: config.token})
 }
 
 var omniSync = new OmniFocusSync({dryrun: dryrun,
                                   ignored_orgs: config.ignored_orgs,
-                                  default_context: config.default_context});
+                                  default_context: config.default_context})
 
-source = new AssignmentSource(github);
+source = new AssignmentSource(github)
 
 function getConfig() {
-  var path = osenv.home() + '/.omnifocus-github';
+  var path = osenv.home() + '/.omnifocus-github'
 
   try {
-    return yaml.safeLoad(fs.readFileSync(path, 'utf8'));
+    return yaml.safeLoad(fs.readFileSync(path, 'utf8'))
   } catch (err) {
     if (err.code === 'ENOENT' && err.path === path) {
-      console.log('Sorry, you must create a ' + path + ' configuration file.');
+      console.log('Sorry, you must create a ' + path + ' configuration file.')
     }
     else {
-      throw err;
+      throw err
     }
   }
 }
