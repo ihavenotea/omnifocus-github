@@ -7,6 +7,7 @@ var osenv       = require('osenv');
 var temp        = require('temp').track();
 var yaml        = require('js-yaml');
 
+var AssignmentSource = require('./lib/assignment-source.js');
 
 var config = getConfig();
 var dryrun = process.argv.includes('--dry-run');
@@ -15,26 +16,7 @@ if (config) {
   github.authenticate({type: 'oauth', token: config.token});
 }
 
-function getUser () {
-  return github.users.get({});
-}
-
-function getAssignments (data) {
-  var username = data.login;
-  var allAssignmentTypes =
-      Promise.all([ github.issues.getAll({filter: "assigned"}),
-                    github.search.issues({q:"is:open is:pr author:" +
-                                          username}),
-                    github.search.issues({q:"is:open is:pr review-requested:"
-                                          + username})]);
-  var concatItems = function(items, res) {
-    return(items || []).concat(res.items || res);
-  };
-
-  return allAssignmentTypes.then(function(data) {
-   return data.reduce(concatItems);
-  });
-}
+source = new AssignmentSource(github);
 
 function processItems(items) {
   var script = scriptForOmnifocusPro(items);
@@ -88,7 +70,7 @@ function scriptForOmnifocusPro(items) {
     script += "    set issueURL to \"" + item.html_url + "\"\n"
 		script += "    set matchCount to count (flattened tasks whose note contains issueURL)\n"
     script += "    if matchCount is 0 then\n"
-    script += "      parse tasks into it with transport text  \"" +
+    script += "      parse tasks into it with transport text \"" +
       item.title +
       " " + repo.full_name +
       " " + (config.default_context || "") +
@@ -129,8 +111,7 @@ function handleHttpErrors(err) {
   }
 }
 
-getUser().
-  then(getAssignments).
+source.getAssignments().
   then(processItems).
   then(function (data) {console.log("Sync Complete.")}).
   catch(handleHttpErrors);
