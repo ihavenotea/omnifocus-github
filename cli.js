@@ -1,42 +1,26 @@
 #!/usr/bin/env node
 
-var fs          = require('fs')
-var github      = new (require("github"))({version: "3.0.0"})
-var osenv       = require('osenv')
-var yaml        = require('js-yaml')
-
 var AssignmentSource = require('./lib/assignment-source.js')
+var Config = require('./lib/config.js')
+var GitHubApi = require('github')
 var OmniFocusSync = require('./lib/omnifocus-sync.js')
+var PromiseConcatenator = require('./lib/promise-concatenator.js')
 
-var config = getConfig()
-var dryrun = process.argv.includes('--dry-run')
+var config = new Config()
+var omniSync = new OmniFocusSync(config.settings)
 
-if (config) {
-  github.authenticate({type: 'oauth', token: config.token})
-}
+var connections = config.connections()
 
-var omniSync = new OmniFocusSync({dryrun: dryrun,
-                                  ignored_orgs: config.ignored_orgs,
-                                  default_context: config.default_context})
+var sourceAssignments = Array.from(Object.values(connections), (conn) => {
+  let api = new GitHubApi(conn.settings)
+  api.authenticate(conn.auth)
 
-source = new AssignmentSource(github)
+  let source = new AssignmentSource(api)
+  let assignments = source.getAssignments()
+  return assignments
+})
 
-function getConfig() {
-  var path = osenv.home() + '/.omnifocus-github'
-
-  try {
-    return yaml.safeLoad(fs.readFileSync(path, 'utf8'))
-  } catch (err) {
-    if (err.code === 'ENOENT' && err.path === path) {
-      console.log('Sorry, you must create a ' + path + ' configuration file.')
-    }
-    else {
-      throw err
-    }
-  }
-}
-
-source.getAssignments().
+new PromiseConcatenator(sourceAssignments).
   then((data) => omniSync.processItems(data)).
   then(() => console.log("Sync Complete.")).
-  catch(source.handleHttpErrors)
+  catch(console.error)
