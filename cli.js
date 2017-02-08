@@ -101,17 +101,7 @@ function getConfig() {
   }
 }
 
-function handleHttpErrors(err) {
-  switch (err.code) {
-    case 401:
-      console.log('Could not authenticate. Check your oauth token in your configuration file.');
-      break;
-    default:
-      throw err;
-  }
-}
-
 source.getAssignments().
   then(processItems).
-  then(function (data) {console.log("Sync Complete.")}).
-  catch(handleHttpErrors);
+  then(() => console.log("Sync Complete.")).
+  catch(source.handleHttpErrors)
