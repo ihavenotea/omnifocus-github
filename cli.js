@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-var applescript = require("applescript");
-var fs          = require('fs');
-var github      = new (require("github"))({version: "3.0.0"});
-var osenv       = require('osenv');
-var temp        = require('temp').track();
-var yaml        = require('js-yaml');
+var fs          = require('fs')
+var github      = new (require("github"))({version: "3.0.0"})
+var osenv       = require('osenv')
+var yaml        = require('js-yaml')
 
 var AssignmentSource = require('./lib/assignment-source.js');
 var OmniFocusSync = require('./lib/omnifocus-sync.js');
